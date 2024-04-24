@@ -1,0 +1,122 @@
+Steps need to follow
+=================
+1, Create .NET Core application using MVC template.
+
+2, Install the below nugget packages
+     1,  Microsoft.EntityFrameworkCore
+     2,  Microsoft.EntityFrameworkCore.Sqlserver 
+     3,  Microsoft.EntityFrameworkCore.Tools
+     
+3, Generate DbContext using scaffold command
+     Scaffold-DbContext "connectionstring" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models
+
+Scaffold-DbContext "Server=MLT-0252; Database=Shops; Trusted_Connection=True; TrustServerCertificate=True;" Microsoft.EntityFrameWorkCore.Sqlserver -OutputDir Models
+
+4, We are getting the above warning because of the connection string in the Context class.
+ Having the connection in the code file is not a good programming practice. Let’s move the connection string to the appsettings.json file.
+ So, open the appsettings.json file and copy and paste the following code.
+ You can see, additionally, we have added the connection string.
+
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    "DBConnection": "Server=LAPTOP-6P5NK25R\\SQLSERVER2022DEV; Database=Company; Trusted_Connection=True; TrustServerCertificate=True;"
+  }
+}
+
+Then modify the OnConfiguring (DbContextOptionsBuilder optionsBuilder) method of the CompanyContext.cs file as shown below. 
+Here, we have removed everything and made it an empty method.
+
+protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+{ 
+}
+
+Adding DBContext Service
+As discussed in .NET 6, we need to add services and middleware components within the Main method only. We need to add the following DBContext Service
+
+builder.Services.AddDbContext<CompanyContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString(“DBConnection”)));
+
+
+
+
+
+
+PrContext _context;
+
+public AboutController(PrContext context )
+{
+    _context = context;
+}
+
+
+so the error was i have put wrong server name
+
+public IActionResult Index()
+{
+    return View(_context.Emps.ToList());
+}
+
+  [HttpPost]
+  public async Task<IActionResult> Create( Emp emp)
+  {
+      if (ModelState.IsValid)
+      {
+          _context.Add(emp);
+          await _context.SaveChangesAsync();
+          return RedirectToAction(nameof(Index));
+      }
+      return View(emp);
+  }
+
+//Update Data
+ public ActionResult Edit(int? id)
+{
+    if (id == null)
+    {
+        return NotFound();
+    }
+   var update =db.Emps.Find(id);
+    if (update == null)
+    {
+        return NotFound();
+    }
+    return View(update);
+}
+[HttpPost]
+public ActionResult Edit(Emp emp)
+{
+    if (ModelState.IsValid)
+    {
+        db.Emps.Update(emp);
+        db.SaveChanges();
+        return RedirectToAction("Index");
+    }
+return View();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
